@@ -1,4 +1,4 @@
-import time, datetime, subprocess, sys, threading
+import time, datetime, subprocess, sys, threading, json, os.path
 #import logging
 import pyautogui as bot
 import math
@@ -12,23 +12,9 @@ from flask_socketio import SocketIO, emit, disconnect
 # async setting 
 async_mode = 'eventlet'
 
-bots = {
-	"bot_name": "EAI 861M",
-	"bot_desc": "Monthly Automation of 861M process",
-	"step": [{
-        "action": "ps_script",
-        "input": [
-          "C:\\Users\\Nick Gindt\\Desktop\\test.ps1"
-          ]
-      },
-      {
-        "action": "ps_script",
-        "input": [
-          "C:\\Users\\Nick Gindt\\Desktop\\fake.xls", 
-          "C:\\Users\\Nick Gindt\\Desktop\\fake2.xls"
-        ]
-      }]
-}
+#setting config file path
+my_path = os.path.dirname(__file__)
+config_path = os.path.join(my_path, 'config/bot_config.json')
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode=async_mode)
@@ -42,6 +28,10 @@ def __on_connect():
 #page routing
 @app.route("/")
 def main():
+	with open(config_path) as config_json:
+		config = json.load(config_json)
+
+
 	templateData = {
 	}
 	return render_template('main.html', async_mode=socketio.async_mode, **templateData)
@@ -54,13 +44,30 @@ def howto():
 
 @app.route("/config")
 def config():
+	with open(config_path) as config_json:
+		config = json.load(config_json)
+
 	templateData = {
+		'config': config
 	}
-	return render_template('config.html', async_mode=socketio.async_mode, **bots)	
+	return render_template('config.html', async_mode=socketio.async_mode, **templateData)	
 #web socket actions
-# @socketio.on('my_ping', namespace='/test')
+# @socketio.on('ping', namespace='/test')
 # def ping_pong():
-#     emit('my_pong')
+#     emit('pong', {'data': 'ouch'})
+
+@socketio.on('save_bot',namespace ='/test')
+def savebot(input_json):
+	with open(config_path) as config_json:
+		config = json.load(config_json)
+
+	new_bot = json.loads(input_json)
+	config['bots'].append(new_bot)
+
+	with open(config_path,'w') as outfile:
+		json.dump(config, outfile)
+
+	socketio.emit('roger', input_json, namespace='/test')
 
 
 @socketio.on('startme', namespace='/test')

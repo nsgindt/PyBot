@@ -1,6 +1,4 @@
-$(document).ready(function() {
-
-});            
+       
 $(document).on('change','select', function(ev) {
     var $action = this.value;
     var $gp = $(this).parent().parent().parent().children().eq(1);
@@ -130,17 +128,26 @@ function updateStepNumber(){
 };
 
 function saveBot(){
+    var json = {};
     var bot_name = $("#bot_name").val();
     var bot_desc = $("#bot_desc").val();
+
+    json.bot_id = "NEXT";
+    json.bot_name = bot_name;
+    json.bot_desc = bot_desc;
+    json.step = [];
+
     $(".bot_step").each(function(){
-        var $step_num = $(this).children().eq(0).children().eq(0).children().eq(0).children().eq(1)
-        var $action = $(this).children().eq(0).children().eq(0).children().eq(1).children().eq(1)
-        var $path1 = $(this).children().eq(0).children().eq(1).children().eq(1)
-        var $path2 = $(this).children().eq(0).children().eq(1).children().eq(3)
-
-        //alert($path1.val())
+        var step_num = $(this).children().eq(0).children().eq(0).children().eq(0).children().eq(1).val();
+        var action = $(this).children().eq(0).children().eq(0).children().eq(1).children().eq(1).val();
+        var path1 = $(this).children().eq(0).children().eq(1).children().eq(1).val();
+        var path2 = $(this).children().eq(0).children().eq(1).children().eq(3).val();
+        step_obj = {};
+        step_obj.action = action;
+        step_obj.input = [path1,path2];
+        json.step[step_num -1] =step_obj;
     });
-
+    return JSON.stringify(json);
 };
 
 $(document).on( "click", "#lock_header", function(ev) {
@@ -165,3 +172,31 @@ $(document).ready(function () {
     });
 
 });
+
+$(document).ready(function() {
+    namespace = '/test';
+    // Connect to the Socket.IO server.
+    // The connection URL has the following format:
+    //     http[s]://<domain>:<port>[/<namespace>]
+    var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+    // Event handler for new connections.
+    // The callback function is invoked when a connection with the
+    // server is established.
+    socket.on('connect', function() {
+        socket.emit('my_event', {data: 'I\'m connected'});
+    });
+
+    socket.on('roger', function(msg) {
+        //$('#log').append('<br>' + $('<div>').text('Received #' + msg.count + ': ' + msg.data).html());
+        console.log('from ws')
+        console.log( msg );
+    });
+
+    $( "#save_bot" ).click(function() {
+        console.log('save_bot clicked')
+        //json = saveBot();
+        //console.log(json);
+        socket.emit('save_bot', saveBot());
+    });
+
+});     

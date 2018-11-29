@@ -38,17 +38,15 @@
 	        </div>
 
 	        <ul class="list-unstyled components">
-	            <li class="active">
-	                <a id ="bot1">bot 1</a>
-	            </li>
+	        	{% for bot in config['bots'] %}
 	            <li>
-	                <a id ="bot2">bot 2</a>
+	                <a id ="{{bot['bot_id']}}">{{bot['bot_name']}}</a>
 	            </li>
-
+	            {% endfor %}
 	        </ul>
 	        <ul class="list-unstyled components">
-	            <li>
-	                <a id = "new_bot">Create New Bot<i class="far fa-plus-square"></i></a>
+	            <li class="active">
+	                <a id = "new_bot" >Create New Bot<i class="far fa-plus-square"></i></a>
 	            </li>
         	</ul>
 	    </nav>
@@ -57,17 +55,17 @@
 
 		<div class="container">
 			<div class="jumbotron">
-				<h1>Config</h1>
-			</br>
+				<h1>Create New Bot</h1>
+				</br>
 				<form>
 					<div class="form-group">
 						<label for="bot_name">Bot Name</label>
-						<input type="text" class="form-control" id="bot_name" placeholder="" readonly>
+						<input type="text" class="form-control" id="bot_name" placeholder="">
 					</br>
 						<label for="bot_desc">Description</label>
-						<textarea class="form-control" id="bot_desc" rows="2" readonly></textarea>
+						<textarea class="form-control" id="bot_desc" rows="2"></textarea>
 					</br>
-						<button type="button" class="btn btn-info" id="edit_header">edit</button>
+						<button type="button" class="btn btn-secondary" id="lock_header">lock</button>
 					</div>
 				</form>
 
@@ -102,8 +100,8 @@
 					</div>
 				</div>
 
-				<button id="add_step" type="button" class="btn btn-info">Add Step</button>
-
+				<button id="add_step" type="button" class="btn btn-secondary">Add Step</button>
+				<button id="save_bot" type="button" class="btn btn-success float-right">Save Bot</button>
 
 
 
