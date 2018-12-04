@@ -131,8 +131,9 @@ function saveBot(){
     var json = {};
     var bot_name = $("#bot_name").val();
     var bot_desc = $("#bot_desc").val();
+    var bot_id = $("#bot_id").val();
 
-    json.bot_id = "NEXT";
+    json.bot_id = bot_id;
     json.bot_name = bot_name;
     json.bot_desc = bot_desc;
     json.step = [];
@@ -143,12 +144,19 @@ function saveBot(){
         var path1 = $(this).children().eq(0).children().eq(1).children().eq(1).val();
         var path2 = $(this).children().eq(0).children().eq(1).children().eq(3).val();
         step_obj = {};
+        step_obj.step_num = step_num;
         step_obj.action = action;
         step_obj.input = [path1,path2];
         json.step[step_num -1] =step_obj;
     });
     return JSON.stringify(json);
 };
+
+function deleteBot(){
+    var bot_id = $("#bot_id").val();
+    return bot_id;
+};
+
 
 $(document).on( "click", "#lock_header", function(ev) {
     $("#bot_name").attr("readonly", true);
@@ -186,10 +194,10 @@ $(document).ready(function() {
         socket.emit('my_event', {data: 'I\'m connected'});
     });
 
-    socket.on('roger', function(msg) {
+    socket.on('confirm_save', function(msg) {
         //$('#log').append('<br>' + $('<div>').text('Received #' + msg.count + ': ' + msg.data).html());
-        console.log('from ws')
-        console.log( msg );
+        alert("bot saved");
+        console.log(msg);
     });
 
     $( "#save_bot" ).click(function() {
@@ -199,4 +207,10 @@ $(document).ready(function() {
         socket.emit('save_bot', saveBot());
     });
 
+    $( "#delete_bot" ).click(function() {
+        console.log('delete_bot clicked')
+        //json = saveBot();
+        //console.log(json);
+        socket.emit('delete_bot', deleteBot());
+    });
 });     

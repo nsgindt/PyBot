@@ -1,6 +1,7 @@
 import time, datetime, subprocess, sys, threading, json, os.path
 #import logging
 import pyautogui as bot
+import helper_library as helper
 import math
 from openpyxl import load_workbook
 from flask import Flask, render_template, request, session
@@ -47,8 +48,13 @@ def config():
 	with open(config_path) as config_json:
 		config = json.load(config_json)
 
+	# max_bot = max(bot['bot_id'] for bot in config['bots'])
+	# next_bot = int(max_bot) + 1
+	next_bot = helper.get_next_bot(config)
+
 	templateData = {
-		'config': config
+		'config': config,
+		'next_botid': next_bot
 	}
 	return render_template('config.html', async_mode=socketio.async_mode, **templateData)	
 #web socket actions
@@ -58,16 +64,31 @@ def config():
 
 @socketio.on('save_bot',namespace ='/test')
 def savebot(input_json):
+	#load bot_config.json to object
+	with open(config_path) as config_json:
+		config = json.load(config_json)
+	
+	#load json from web socket to object
+	new_bot = json.loads(input_json)
+
+	#add and save new object to bot_config.json
+	if not any(bot['bot_id'] == new_bot['bot_id'] for bot in config['bots']):
+		with open(config_path,'w') as outfile:
+			json.dump(helper.add_bot(config,new_bot), outfile)
+	else:
+		with open(config_path,'w') as outfile:
+			json.dump(helper.update_bot(config,new_bot), outfile)
+
+	socketio.emit('confirm_save', input_json, namespace='/test')
+
+@socketio.on('delete_bot',namespace ='/test')
+def deletebot(bot_id):
 	with open(config_path) as config_json:
 		config = json.load(config_json)
 
-	new_bot = json.loads(input_json)
-	config['bots'].append(new_bot)
-
-	with open(config_path,'w') as outfile:
-		json.dump(config, outfile)
-
-	socketio.emit('roger', input_json, namespace='/test')
+	if any(bot['bot_id'] == bot_id for bot in config['bots']):
+		with open(config_path,'w') as outfile:
+			json.dump(helper.delete_bot(config,bot_id), outfile)
 
 
 @socketio.on('startme', namespace='/test')
