@@ -172,45 +172,61 @@ $(document).on( "click", "#edit_header", function(ev) {
     $(this).html("lock");
 });
 
-$(document).ready(function () {
-
+/*$(document).ready(function () {
     $('#sidebarCollapse').on('click', function () {
         $('#sidebar').toggleClass('active');
         $('#sidebarCollapse').toggleClass('fa-flip-horizontal')
     });
 
-});
+});*/
+
+
+
+
+
+
 
 $(document).ready(function() {
+    //websocket setup
     namespace = '/test';
-    // Connect to the Socket.IO server.
-    // The connection URL has the following format:
-    //     http[s]://<domain>:<port>[/<namespace>]
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
-    // Event handler for new connections.
-    // The callback function is invoked when a connection with the
-    // server is established.
+
     socket.on('connect', function() {
         socket.emit('my_event', {data: 'I\'m connected'});
     });
 
+    //page manipulation
+    $('#sidebarCollapse').on('click', function () {
+        $('#sidebar').toggleClass('active');
+        $('#sidebarCollapse').toggleClass('fa-flip-horizontal')
+    });
+
+    //received socket message
+    //keep this as a test message
+    socket.on('pong', function(msg) {
+        console.log(msg);
+    });
+   
     socket.on('confirm_save', function(msg) {
-        //$('#log').append('<br>' + $('<div>').text('Received #' + msg.count + ': ' + msg.data).html());
         alert("bot saved");
         console.log(msg);
     });
 
+
     $( "#save_bot" ).click(function() {
         console.log('save_bot clicked')
-        //json = saveBot();
-        //console.log(json);
         socket.emit('save_bot', saveBot());
     });
 
     $( "#delete_bot" ).click(function() {
         console.log('delete_bot clicked')
-        //json = saveBot();
-        //console.log(json);
         socket.emit('delete_bot', deleteBot());
     });
+
+    $( ".load_bot").click(function(){
+        console.log('load bot ' + $(this).attr("id"));
+        socket.emit('load_bot', {bot_id: $(this).attr("id")});
+    });
+
+
 });     

@@ -58,9 +58,9 @@ def config():
 	}
 	return render_template('config.html', async_mode=socketio.async_mode, **templateData)	
 #web socket actions
-# @socketio.on('ping', namespace='/test')
-# def ping_pong():
-#     emit('pong', {'data': 'ouch'})
+# @socketio.on('load_bot', namespace='/test')
+# def ping_pong(json):
+#     emit('pong', json)
 
 @socketio.on('save_bot',namespace ='/test')
 def savebot(input_json):
