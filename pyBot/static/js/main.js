@@ -65,6 +65,12 @@ $(document).ready(function() {
         $('#process_status').html( 'Waking up your robots, and making them gather your data.');
     });
 
+        //page manipulation
+    $('#sidebarCollapse').on('click', function () {
+        $('#sidebar').toggleClass('active');
+        $('#sidebarCollapse').toggleClass('fa-flip-horizontal')
+    });
+
 });            
 
     function closeSocket(){

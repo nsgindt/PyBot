@@ -34,12 +34,14 @@ def main():
 
 
 	templateData = {
+	'config': config
 	}
 	return render_template('main.html', async_mode=socketio.async_mode, **templateData)
 
 @app.route("/howto")
 def howto():
 	templateData = {
+	'config': config
 	}
 	return render_template('howto.html', async_mode=socketio.async_mode, **templateData)	
 

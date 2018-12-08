@@ -180,19 +180,6 @@ $(document).on( "click", "#edit_header", function(ev) {
     $(this).html("lock");
 });
 
-/*$(document).ready(function () {
-    $('#sidebarCollapse').on('click', function () {
-        $('#sidebar').toggleClass('active');
-        $('#sidebarCollapse').toggleClass('fa-flip-horizontal')
-    });
-
-});*/
-
-
-
-
-
-
 
 $(document).ready(function() {
     //websocket setup
