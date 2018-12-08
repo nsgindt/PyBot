@@ -37,7 +37,7 @@
 	            <h3>Current Bots</h3>
 	        </div>
 
-	        <ul class="list-unstyled components">
+	        <ul class="list-unstyled components" id="bot_list">
 	        	{% for bot in config['bots'] %}
 	            <li>
 	                <a class = "load_bot" id ="{{bot['bot_id']}}">{{bot['bot_name']}}</a>
@@ -45,7 +45,7 @@
 	            {% endfor %}
 	        </ul>
 	        <ul class="list-unstyled components">
-	            <li class="active">
+	            <li>
 	                <a id = "new_bot" >Create New Bot<i class="far fa-plus-square"></i></a>
 	            </li>
         	</ul>
@@ -56,7 +56,7 @@
 		<div class="container">
 			<div class="jumbotron">
 				<h1>
-					<span>Create New Bot</span>
+					<span id="config_title">Create New Bot</span>
 					<button type="button" class="btn btn-outline-danger float-right" id="delete_bot">Delete Bot</button>
 				</h1>
 				</br>

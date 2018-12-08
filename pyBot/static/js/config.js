@@ -1,8 +1,13 @@
        
 $(document).on('change','select', function(ev) {
-    var $action = this.value;
+    actionSelected.call(this);        
+});
+
+function actionSelected(){
+    var $action = $(this).val();
     var $gp = $(this).parent().parent().parent().children().eq(1);
     var $step = $(this).parent().parent().children().eq(0).children().eq(1);
+    console.log($(this).val())
     switch ($action) {
         case "Run Powershell":
             $gp.html(rtnPShtml($step.val()));
@@ -22,8 +27,7 @@ $(document).on('change','select', function(ev) {
         default:
             $gp.html("");                 
     }
-    //alert( $step.val() );
-});
+};
 
 $( "#add_step" ).click(function() {
     $('#step_list').append(rtnNEWSTEPhtml(getStepCount()));
@@ -89,6 +93,10 @@ function rtnNEWSTEPhtml(step_cnt){
                 <hr class=\"my-4\">\
                 </div>"
     return rtn;
+};
+
+function loadSTEPhtml(bot){
+    var rtn = "";
 };
 
 $(document).on( "click", ".minus", function(ev) {
@@ -208,8 +216,37 @@ $(document).ready(function() {
     });
    
     socket.on('confirm_save', function(msg) {
-        alert("bot saved");
+        alert(msg.bot_name +" saved");
+
         console.log(msg);
+    });
+
+    socket.on('bot_info', function(msg) {
+        console.log(msg);
+        $("#bot_name").val(msg[0].bot_name);
+        $("#config_title").html(msg[0].bot_name);
+        $("#bot_desc").val(msg[0].bot_desc);
+        $("#bot_id").val(msg[0].bot_id);
+        $("#bot_name").attr("readonly", true);
+        $("#bot_desc").attr("readonly", true);
+        $("#lock_header").html("edit");
+        $("#lock_header").attr("id", "edit_header");
+        html = ""
+        for (i=0; i<msg[0].step.length; i++) {
+            html = html + rtnNEWSTEPhtml(msg[0].step[i].step_num -1);
+            //$('#step_list').append(rtnNEWSTEPhtml(i+1));
+        };
+        $('#step_list').html(html);
+        var i = 0
+        $(".bot_step").each(function(){
+            $(this).children().eq(0).children().eq(0).children().eq(1).children().eq(1).val(msg[0].step[i].action);
+            actionSelected.call($(this).children().eq(0).children().eq(0).children().eq(1).children().eq(1));
+            $(this).children().eq(0).children().eq(1).children().eq(1).val(msg[0].step[i].input[0]);
+            $(this).children().eq(0).children().eq(1).children().eq(3).val(msg[0].step[i].input[1]);
+            console.log(msg[0].step[i].action);
+            i++;
+        });
+
     });
 
 
@@ -227,6 +264,11 @@ $(document).ready(function() {
         console.log('load bot ' + $(this).attr("id"));
         socket.emit('load_bot', {bot_id: $(this).attr("id")});
     });
+
+    $( "#new_bot").click(function(){
+        window.location.href = "/config";
+    });
+
 
 
 });     
