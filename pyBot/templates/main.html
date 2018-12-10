@@ -48,7 +48,12 @@
 
 		<div class="container">
 			<div class="jumbotron">
-				<h1><span id="bot_title">{{config['bots'][0]['bot_name']}}</span></h1>
+				<h1><span id="bot_title">{{config['bots'][0]['bot_name']}}</span>
+					<div class="form-group col-md-1 float-right">
+						<input type="text" class="form-control" id="bot_id" value="{{config['bots'][0]['bot_id']}}" readonly>
+					</div>
+
+				</h1>
 				</br>
 				<p class="lead" id="bot_desc">{{config['bots'][0]['bot_desc']}}</p>
 				</br>
@@ -58,7 +63,7 @@
 
 		        <div class="progress">
 		            <div id="progress-bar" class="progress-bar bg-info" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-				</div>			
+				</div>
 				<div id="process_status"></div>
 
 			</div><!-- End jumbotron -->

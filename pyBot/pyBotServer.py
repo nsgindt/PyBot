@@ -1,6 +1,6 @@
 import time, datetime, subprocess, sys, threading, json, os.path
 #import logging
-import pyautogui as bot
+import pyautogui as botgui
 import helper_library as helper
 import math
 from openpyxl import load_workbook
@@ -101,11 +101,11 @@ def loadbot(msg):
 
 
 @socketio.on('startme', namespace='/test')
-def startme():
-    thread_stop_event.set()
-    #emit('my_response', {'data': 'Connected', 'count': 0})
-    socketio.emit('process_started', {'data': 'Starting Robot', 'time':log_time()}, namespace='/test')
-    thread = socketio.start_background_task(target=runPyBot)
+def startme(msg):
+	thread_stop_event.set()
+	emit('my_response', {'data': 'Connected', 'count': 0})
+	socketio.emit('process_started', {'data': 'Starting Robot', 'time':log_time()}, namespace='/test')
+	thread = socketio.start_background_task(runPyBot, msg)
     
 
 
@@ -114,73 +114,87 @@ def stopme():
     #socketio.emit('process_stopped',{'data': 'stop that thread'},namespace='/test')
     thread_stop_event.set()
 
-def runPyBot():
-	#always reset bot error status to false 
-	bot_error = False
-	script_path = "V:\\robotics\\Finance\\Python` Bot\\EIA861M\\Powershell\\getXLS.ps1"
+def runPyBot(msg):
+	socketio.emit('pong',helper.test_load(msg['bot_id']), namespace='/test')
+	bot = helper.test_load(msg['bot_id'])
+	for step in bot[0]['step']:
+		socketio.emit('pong',step, namespace='/test')
+		if step['action'] == 'Typing Bot':
+			botgui.typewrite(step['input'][0])
 
-	#Run Powershell to aggrigate data - throw error if powershell fails	
-	try:
-		subprocess.check_call([r'C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe',
-							'-ExecutionPolicy',
-                            'Unrestricted',
-                            script_path])
-	except subprocess.CalledProcessError:
-		bot_error = True
+		if step['action'] == 'Keypress Bot':
+			botgui.press(step['input'][0])
 
-	if bot_error == False:
-	#Get Build File
-		wb = load_workbook('V:\\robotics\\Finance\\Python Bot\\EIA861M\\Build Files\\current.xlsx')
-		ws = wb['Sheet1']
-		inputVar = []
-		for cell in ws['A']:
-		    if cell.value != None:
-		        inputVar.append(cell.value)
+		if step['action'] == 'Hotkey Bot':
+			socketio.emit('pong','hotkey', namespace='/test')
+			botgui.hotkey(step['input'][0])
 
-	    #Get input script
-		wb2 = load_workbook('V:\\robotics\\Finance\\Python Bot\\EIA861M\\Scripts\\Script.xlsx')
-		ws2 = wb2['Sheet1']
-		actionVar = []
-		for cell in ws2['C']:
-		    if cell.value != None:
-		        actionVar.append(cell.value)
+	# #always reset bot error status to false 
+	# bot_error = False
+	# script_path = "V:\\robotics\\Finance\\Python` Bot\\EIA861M\\Powershell\\getXLS.ps1"
+
+	# #Run Powershell to aggrigate data - throw error if powershell fails	
+	# try:
+	# 	subprocess.check_call([r'C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe',
+	# 						'-ExecutionPolicy',
+ #                            'Unrestricted',
+ #                            script_path])
+	# except subprocess.CalledProcessError:
+	# 	bot_error = True
+
+	# if bot_error == False:
+	# #Get Build File
+	# 	wb = load_workbook('V:\\robotics\\Finance\\Python Bot\\EIA861M\\Build Files\\current.xlsx')
+	# 	ws = wb['Sheet1']
+	# 	inputVar = []
+	# 	for cell in ws['A']:
+	# 	    if cell.value != None:
+	# 	        inputVar.append(cell.value)
+
+	#     #Get input script
+	# 	wb2 = load_workbook('V:\\robotics\\Finance\\Python Bot\\EIA861M\\Scripts\\Script.xlsx')
+	# 	ws2 = wb2['Sheet1']
+	# 	actionVar = []
+	# 	for cell in ws2['C']:
+	# 	    if cell.value != None:
+	# 	        actionVar.append(cell.value)
 
 	    
-		dataVar = 0 #setting variable so the script stats at the begining
-		wait = .05 #set delay on keyboard input
-		num_steps = len(actionVar) #count number of steps for use in progress bar
-		thread_stop_event.clear() #clear the "stop robot" event
-		#completion_time = datetime.datetime.now().strftime("%m-%d-%y %H:%M") #get current time for logging
+	# 	dataVar = 0 #setting variable so the script stats at the begining
+	# 	wait = .05 #set delay on keyboard input
+	# 	num_steps = len(actionVar) #count number of steps for use in progress bar
+	# 	thread_stop_event.clear() #clear the "stop robot" event
+	# 	#completion_time = datetime.datetime.now().strftime("%m-%d-%y %H:%M") #get current time for logging
 
-		#loop through each step of the bot and take action
-		for i in range(len(actionVar)):
-			if not thread_stop_event.isSet():
-				if actionVar[i] == '$data':
-					bot.typewrite(inputVar[dataVar],wait)
-					dataVar = dataVar + 1
-					socketio.sleep(wait)
-				elif actionVar[i] == '$save':
-					bot.hotkey('ctrl','s')
-					socketio.sleep(wait)
-				else:
-					bot.press(actionVar[i])
-					socketio.sleep(wait)
+	# 	#loop through each step of the bot and take action
+	# 	for i in range(len(actionVar)):
+	# 		if not thread_stop_event.isSet():
+	# 			if actionVar[i] == '$data':
+	# 				bot.typewrite(inputVar[dataVar],wait)
+	# 				dataVar = dataVar + 1
+	# 				socketio.sleep(wait)
+	# 			elif actionVar[i] == '$save':
+	# 				bot.hotkey('ctrl','s')
+	# 				socketio.sleep(wait)
+	# 			else:
+	# 				bot.press(actionVar[i])
+	# 				socketio.sleep(wait)
 
-				#update web page
-				number = math.floor((i*100)/num_steps) #calculate pct complete for progress bar
-				#send msg to log
-				socketio.emit('my_response',{'data': number, 'count': 0}, namespace='/test')
-				#send msg to progress bar
-				socketio.emit('process_status', {'step': i + 1, 'total_steps': num_steps}, namespace='/test')
+	# 			#update web page
+	# 			number = math.floor((i*100)/num_steps) #calculate pct complete for progress bar
+	# 			#send msg to log
+	# 			socketio.emit('my_response',{'data': number, 'count': 0}, namespace='/test')
+	# 			#send msg to progress bar
+	# 			socketio.emit('process_status', {'step': i + 1, 'total_steps': num_steps}, namespace='/test')
 
-		#send process completed or process aborted
-		if not thread_stop_event.isSet():
-			socketio.emit('my_response',{'data': 100, 'count': 0}, namespace='/test')
-			socketio.emit('bot_complete',{'data': 'Process Completed', 'time':log_time()}, namespace='/test')
-		else:
-			socketio.emit('bot_aborted',{'data': 'Process Aborted', 'time':log_time()}, namespace='/test')
-	else: #when bot_error == True
-		socketio.emit('ps_error',{'data': 'Powershell Error'}, namespace='/test')
+	# 	#send process completed or process aborted
+	# 	if not thread_stop_event.isSet():
+	# 		socketio.emit('my_response',{'data': 100, 'count': 0}, namespace='/test')
+	# 		socketio.emit('bot_complete',{'data': 'Process Completed', 'time':log_time()}, namespace='/test')
+	# 	else:
+	# 		socketio.emit('bot_aborted',{'data': 'Process Aborted', 'time':log_time()}, namespace='/test')
+	# else: #when bot_error == True
+	# 	socketio.emit('ps_error',{'data': 'Powershell Error'}, namespace='/test')
 
 def log_time():
 	return datetime.datetime.now().strftime("%m-%d-%y %H:%M") 

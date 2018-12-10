@@ -61,7 +61,7 @@ $(document).ready(function() {
         socket.emit('stopme');
     });
     $( "#startme" ).click(function() {
-        socket.emit('startme');
+        socket.emit('startme', {bot_id: $("#bot_id").val()});
         $('#process_status').html( 'Waking up your robots, and making them gather your data.');
     });
 
@@ -70,6 +70,23 @@ $(document).ready(function() {
         $('#sidebar').toggleClass('active');
         $('#sidebarCollapse').toggleClass('fa-flip-horizontal')
     });
+
+    $( ".load_bot").click(function(){
+        console.log('load bot ' + $(this).attr("id"));
+        socket.emit('load_bot', {bot_id: $(this).attr("id")});
+    });
+
+    socket.on('bot_info', function(msg) {
+        $("#bot_title").html(msg[0].bot_name);
+        $("#bot_desc").html(msg[0].bot_desc);
+        $("#bot_id").val(msg[0].bot_id);
+    });
+
+    socket.on('pong', function(msg) {
+        console.log(msg);
+    });
+
+
 
 });            
 
