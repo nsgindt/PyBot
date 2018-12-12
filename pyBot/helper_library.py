@@ -1,4 +1,9 @@
 import json, os.path
+try:
+    from __main__ import socketio
+except ImportError:
+    from pyBotServer import socketio
+
 #setting config file path
 my_path = os.path.dirname(__file__)
 config_path = os.path.join(my_path, 'config/bot_config.json')

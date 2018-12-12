@@ -126,73 +126,83 @@ def runPyBot(msg):
 			botgui.press(step['input'][0])
 
 		if step['action'] == 'Hotkey Bot':
-			socketio.emit('pong','hotkey', namespace='/test')
-			botgui.hotkey(step['input'][0])
+			if len(step['input'][0].split(',')) == 2:
+				botgui.hotkey(step['input'][0].split(',')[0],step['input'][0].split(',')[1])
+			elif len(step['input'][0].split(',')) == 3:
+				botgui.hotkey(step['input'][0].split(',')[0],step['input'][0].split(',')[1],step['input'][0].split(',')[2]) 
 
-	# #always reset bot error status to false 
-	# bot_error = False
-	# script_path = "V:\\robotics\\Finance\\Python` Bot\\EIA861M\\Powershell\\getXLS.ps1"
+		if step['action'] == 'Run Powershell':
+			#always reset bot error status to false 
+			bot_error = False
 
-	# #Run Powershell to aggrigate data - throw error if powershell fails	
-	# try:
-	# 	subprocess.check_call([r'C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe',
-	# 						'-ExecutionPolicy',
- #                            'Unrestricted',
- #                            script_path])
-	# except subprocess.CalledProcessError:
-	# 	bot_error = True
+			#Run Powershell to aggrigate data - throw error if powershell fails	
+			try:
+				socketio.emit('pong',step['input'][0], namespace='/test')
+				subprocess.check_call([r'C:\\WINDOWS\\system32\\WindowsPowerShell\\v1.0\\powershell.exe',
+									'-ExecutionPolicy',
+		                            'Unrestricted',
+		                            step['input'][0]])
+			except subprocess.CalledProcessError:
+				bot_error = True
 
-	# if bot_error == False:
-	# #Get Build File
-	# 	wb = load_workbook('V:\\robotics\\Finance\\Python Bot\\EIA861M\\Build Files\\current.xlsx')
-	# 	ws = wb['Sheet1']
-	# 	inputVar = []
-	# 	for cell in ws['A']:
-	# 	    if cell.value != None:
-	# 	        inputVar.append(cell.value)
+			if bot_error == False:
+				socketio.emit('ps_error',{'data': 'Powershell in progress'}, namespace='/test')
+			else: #when bot_error == True
+				socketio.emit('ps_error',{'data': 'Powershell Error'}, namespace='/test')
 
-	#     #Get input script
-	# 	wb2 = load_workbook('V:\\robotics\\Finance\\Python Bot\\EIA861M\\Scripts\\Script.xlsx')
-	# 	ws2 = wb2['Sheet1']
-	# 	actionVar = []
-	# 	for cell in ws2['C']:
-	# 	    if cell.value != None:
-	# 	        actionVar.append(cell.value)
+		if step['action'] == 'Run Robot Script':
+			#build data array
+			data_wb = load_workbook(step['input'][1])
+			data_ws = data_wb['Sheet1']
+			data_array = []
+			for cell in data_ws['A']:
+				if cell.value != None:
+					data_array.append(cell.value)
 
-	    
-	# 	dataVar = 0 #setting variable so the script stats at the begining
-	# 	wait = .05 #set delay on keyboard input
-	# 	num_steps = len(actionVar) #count number of steps for use in progress bar
-	# 	thread_stop_event.clear() #clear the "stop robot" event
-	# 	#completion_time = datetime.datetime.now().strftime("%m-%d-%y %H:%M") #get current time for logging
+			socketio.emit('pong',data_array[2], namespace='/test')
+			#build action array
+			action_wb = load_workbook(step['input'][0])
+			action_ws = action_wb['Sheet1']
+			action_array = []
+			for cell in action_ws['C']:
+				if cell.value != None:
+					action_array.append(cell.value)
 
-	# 	#loop through each step of the bot and take action
-	# 	for i in range(len(actionVar)):
-	# 		if not thread_stop_event.isSet():
-	# 			if actionVar[i] == '$data':
-	# 				bot.typewrite(inputVar[dataVar],wait)
-	# 				dataVar = dataVar + 1
-	# 				socketio.sleep(wait)
-	# 			elif actionVar[i] == '$save':
-	# 				bot.hotkey('ctrl','s')
-	# 				socketio.sleep(wait)
-	# 			else:
-	# 				bot.press(actionVar[i])
-	# 				socketio.sleep(wait)
+			socketio.emit('pong',action_array[2], namespace='/test')
 
-	# 			#update web page
-	# 			number = math.floor((i*100)/num_steps) #calculate pct complete for progress bar
-	# 			#send msg to log
-	# 			socketio.emit('my_response',{'data': number, 'count': 0}, namespace='/test')
-	# 			#send msg to progress bar
-	# 			socketio.emit('process_status', {'step': i + 1, 'total_steps': num_steps}, namespace='/test')
+			dataVar = 0 #setting variable so the script stats at the begining
+			wait = .05 #set delay on keyboard input
+			num_steps = len(action_array) #count number of steps for use in progress bar
+			thread_stop_event.clear() #clear the "stop robot" event
+			#completion_time = datetime.datetime.now().strftime("%m-%d-%y %H:%M") #get current time for logging
 
-	# 	#send process completed or process aborted
-	# 	if not thread_stop_event.isSet():
-	# 		socketio.emit('my_response',{'data': 100, 'count': 0}, namespace='/test')
-	# 		socketio.emit('bot_complete',{'data': 'Process Completed', 'time':log_time()}, namespace='/test')
-	# 	else:
-	# 		socketio.emit('bot_aborted',{'data': 'Process Aborted', 'time':log_time()}, namespace='/test')
+			#loop through each step of the bot and take action
+			for i in range(len(action_array)):
+				if not thread_stop_event.isSet():
+					if action_array[i] == '$data':
+						botgui.typewrite(data_array[dataVar],wait)
+						dataVar = dataVar + 1
+						socketio.sleep(wait)
+					elif action_array[i] == '$save':
+						botgui.hotkey('ctrl','s')
+						socketio.sleep(wait)
+					else:
+						botgui.press(action_array[i])
+						socketio.sleep(wait)
+
+					#update web page
+					number = math.floor((i*100)/num_steps) #calculate pct complete for progress bar
+					#send msg to log
+					socketio.emit('my_response',{'data': number, 'count': 0}, namespace='/test')
+					#send msg to progress bar
+					socketio.emit('process_status', {'step': i + 1, 'total_steps': num_steps}, namespace='/test')
+
+			#send process completed or process aborted
+			if not thread_stop_event.isSet():
+				socketio.emit('my_response',{'data': 100, 'count': 0}, namespace='/test')
+				socketio.emit('bot_complete',{'data': 'Process Completed', 'time':log_time()}, namespace='/test')
+			else:
+				socketio.emit('bot_aborted',{'data': 'Process Aborted', 'time':log_time()}, namespace='/test')
 	# else: #when bot_error == True
 	# 	socketio.emit('ps_error',{'data': 'Powershell Error'}, namespace='/test')
 
